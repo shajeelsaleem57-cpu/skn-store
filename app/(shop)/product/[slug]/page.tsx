@@ -17,14 +17,6 @@ import ReviewForm from "./ReviewForm";
 
 export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    where: { isPublished: true },
-    select: { slug: true },
-  });
-  return products.map((p) => ({ slug: p.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {
