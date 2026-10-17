@@ -246,6 +246,8 @@ async function CategoriesSection({ heading, limit }: { heading: string; limit: n
                   src={c.image}
                   alt={c.name}
                   fill
+                  loading="lazy"
+                  quality={60}
                   className="object-cover transition group-hover:scale-105"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 />
@@ -322,6 +324,8 @@ async function FlashDealSection({
               src={images[0]}
               alt={product.title}
               fill
+              loading="lazy"
+              quality={60}
               className="rounded object-cover"
               sizes="(max-width: 768px) 100vw, 320px"
             />

@@ -66,6 +66,8 @@ export default async function CategoriesPage() {
                       src={c.image}
                       alt={c.name}
                       fill
+                      loading="lazy"
+                      quality={60}
                       className="object-cover transition group-hover:scale-105"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
