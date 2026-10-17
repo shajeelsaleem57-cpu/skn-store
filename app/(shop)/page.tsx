@@ -223,7 +223,6 @@ async function CategoriesSection({ heading, limit }: { heading: string; limit: n
     where: { isVisible: true, parentId: null },
     orderBy: { sortOrder: "asc" },
     take: limit,
-    include: { _count: { select: { products: true } } },
   });
   if (categories.length === 0) return null;
   return (
