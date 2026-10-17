@@ -1,0 +1,279 @@
+// SKN Store — Prisma schema (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  passwordHash     String
+  role             String     @default("customer")
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+  wishlist  Wishlist[]
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  label      String  @default("Home")
+  fullName   String
+  mobile     String
+  address    String
+  city       String
+  province   String
+  postalCode String?
+  isDefault  Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  icon        String?
+  parentId    String?
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id                String    @id @default(cuid())
+  title             String
+  slug              String    @unique
+  sku               String?
+  price             Int
+  salePrice         Int?
+  stock             Int       @default(0)
+  lowStockThreshold Int       @default(5)
+  images            String    @default("[]") // JSON array of URLs
+  shortDescription  String?
+  description       String?
+  specifications    String    @default("{}") // JSON object
+  isPublished       Boolean   @default(true)
+  isFeatured        Boolean   @default(false)
+  isBestSeller      Boolean   @default(false)
+  publishedAt       DateTime?
+  categoryId        String?
+  seoTitle          String?
+  seoDescription    String?
+  seoKeywords       String?
+  ratingAvg         Float     @default(0)
+  ratingCount       Int       @default(0)
+  soldCount         Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  category Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants ProductVariant[]
+  reviews  Review[]
+  items    OrderItem[]
+  wishlist Wishlist[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isPublished])
+}
+
+model ProductVariant {
+  id           String  @id @default(cuid())
+  productId    String
+  name         String // e.g. "Size"
+  value        String // e.g. "Large"
+  priceAdjust  Int     @default(0)
+  stock        Int?
+  sku          String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        String      @default("NEW")
+  userId        String?
+  fullName      String
+  mobile        String
+  whatsapp      String?
+  address       String
+  city          String
+  province      String
+  postalCode    String?
+  notes         String?
+  subtotal      Int
+  deliveryFee   Int         @default(0)
+  discount      Int         @default(0)
+  total         Int
+  couponCode    String?
+  courier       String?
+  trackingNumber String?
+  trackingUrl   String?
+  internalNotes String?
+  riskFlags     String   @default("[]") // JSON array of {code, detail} risk flags
+  confirmedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items OrderItem[]
+
+  @@index([orderNumber])
+  @@index([mobile])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RefusedAddress {
+  id        String   @id @default(cuid())
+  address   String
+  city      String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([address])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String?
+  variantId String?
+  title     String
+  variant   String?
+  price     Int
+  qty       Int
+  image     String?
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  userId     String?
+  name       String
+  rating     Int
+  text       String
+  imageUrl   String?
+  isApproved Boolean  @default(false)
+  isFeatured Boolean  @default(false)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([isApproved])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  type        String    @default("PERCENT") // PERCENT | FIXED
+  value       Int
+  minOrder    Int?
+  maxDiscount Int?
+  expiresAt   DateTime?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  perUserLimit Int?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@index([code])
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @default("")
+}
+
+model HomepageSection {
+  id        String  @id @default(cuid())
+  name      String
+  type      String // hero | trust_strip | categories | best_sellers | flash_deal | why_us | reviews | banner
+  isVisible Boolean @default(true)
+  sortOrder Int     @default(0)
+  config    String  @default("{}") // JSON
+}
+
+model Page {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  content        String   @default("")
+  seoTitle       String?
+  seoDescription String?
+  isPublished    Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
+
+model BlogPost {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  excerpt        String?
+  content        String    @default("")
+  image          String?
+  category       String?
+  tags           String    @default("[]") // JSON array
+  author         String?
+  seoTitle       String?
+  seoDescription String?
+  isPublished    Boolean   @default(true)
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  sortOrder Int     @default(0)
+  isVisible Boolean @default(true)
+}
