@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const revalidate = 1800;
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { parseImages, formatPKR, discountPercent } from "@/lib/utils";
