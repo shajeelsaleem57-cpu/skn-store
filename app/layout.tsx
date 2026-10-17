@@ -66,6 +66,12 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://m.media-amazon.com" />
+        <link rel="preconnect" href="https://ae01.alicdn.com" />
+        <link rel="preconnect" href="https://ae04.alicdn.com" />
+        <link rel="preconnect" href="https://img.darz.pk" />
+      </head>
       <body className="bg-surface font-sans text-ink antialiased">
         <div style={cssVars} className="min-h-screen bg-surface text-ink">
           <CartProvider>
